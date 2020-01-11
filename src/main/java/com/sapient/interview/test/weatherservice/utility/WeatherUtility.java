@@ -2,6 +2,9 @@ package com.sapient.interview.test.weatherservice.utility;
 
 import java.util.Arrays;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.XML;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -11,30 +14,33 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.sapient.interview.test.weatherservice.customexception.ServiceException;
-import com.sapient.interview.test.weatherservice.model.WeatherForecast;
 
 @Component
 public class WeatherUtility {
 
 	RestTemplate restTemplate = new RestTemplate();
+	XmlMapper xmlMapper = new XmlMapper();
 
-	public WeatherForecast httpRequest(String city, String country) throws ServiceException {
+	public JSONArray httpRequest(String url) throws ServiceException {
 		HttpHeaders headers = new HttpHeaders();
-		headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+		headers.setAccept(Arrays.asList(MediaType.APPLICATION_XML));
 		HttpEntity<String> entity = new HttpEntity<String>("parameters", headers);
 
-		ResponseEntity<WeatherForecast> result;
+		ResponseEntity<String> result;
 		try {
-			result = restTemplate.exchange(new StringBuilder("http://api.openweathermap.org/data/2.5/forecast?q=")
-					.append(city).append(",").append(country)
-					.append("&mode=json&appid=d2929e9483efc82c82c32ee7e02d563e&units=metric").toString(),
-					HttpMethod.GET, entity, WeatherForecast.class);
+			result = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
 		} catch (RestClientException e) {
 			throw new ServiceException(e.getLocalizedMessage());
 		}
-		System.out.println(result.getBody());
-		return result.getBody();
+
+		JSONObject xmlJSONObj = XML.toJSONObject(result.getBody().toString());
+		JSONObject weatherdata = xmlJSONObj.getJSONObject("weatherdata");
+		JSONObject forecast = weatherdata.getJSONObject("forecast");
+		JSONArray jsonArray = forecast.getJSONArray("time");
+		return jsonArray;
+
 	}
 
 }
