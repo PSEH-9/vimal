@@ -14,7 +14,7 @@ public class WeatherController {
 	@Autowired
 	private WeatherService weatherService;
 
-	@GetMapping("condition/{city}/{country}")
+	@GetMapping("weather-forecast/{city}/{country}")
 	public String getWeaterCondition(@PathVariable("city") String city, @PathVariable("country") String country) {
 		try {
 			return weatherService.condition(city, country);
